@@ -1,0 +1,8 @@
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\bin\Debug\virtVendingMachine.exe.config
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\bin\Debug\virtVendingMachine.exe
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\bin\Debug\virtVendingMachine.pdb
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.Form1.resources
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.Properties.Resources.resources
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.csproj.GenerateResource.Cache
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.exe
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.pdb
