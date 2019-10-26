@@ -21,9 +21,6 @@ namespace virtVendingMachine
         private double Balance = 0;
         protected List<List<string>> labelnames = new List<List<string>>();
         Inventory stock = null;
-        static TcpListener server;
-        static readonly object o = new object();
-        bool exit = false;
 
         public Form1(Inventory inventory)
         {
@@ -31,8 +28,6 @@ namespace virtVendingMachine
             inventory.FillInventory();
             UpdateLabels(inventory);
             stock = inventory;
-            Console.WriteLine(inventory.GetAvailableItems());
-            Console.WriteLine(inventory.GetPriceList());
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -183,7 +178,6 @@ namespace virtVendingMachine
             }
             else
             {
-                //parse txtMoney.Text
                 ParseMoney();
             }
             lblBalance.Text = string.Format("Balance: ${0}", Balance);
@@ -408,59 +402,122 @@ namespace virtVendingMachine
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            IPHostEntry host = Dns.GetHostEntry("localhost");
-            IPAddress ip = new IPAddress(host.AddressList.First().GetAddressBytes());
+            IPHostEntry ipHost = Dns.GetHostEntry(Dns.GetHostName());
+            IPAddress ipAddr = ipHost.AddressList[0];
+            IPEndPoint localEP = new IPEndPoint(ipAddr, 3000);
 
-            server = new TcpListener(ip, 3000);
-            server.Start();
-            Console.WriteLine("Server started on port 3000");
+            Socket listener = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            while (!exit)
+            try
             {
-                if (server.Pending())
+                listener.Bind(localEP);
+
+                listener.Listen(10);
+
+                bool exit = false;
+
+                while (!exit)
                 {
-                    new Thread(ServerService).Start();
+                    Console.WriteLine("Server started and listening on port 3000");
+
+                    Socket clientSocket = listener.Accept();
+
+                    //buffer
+                    byte[] bytes = new Byte[1024];
+                    string data = null;
+                    byte[] message = Encoding.ASCII.GetBytes("Test server");
+
+                    while (true)
+                    {
+                        if (!clientSocket.Connected)
+                        {
+                            clientSocket = listener.Accept();
+                        }
+                        int nByte = clientSocket.Receive(bytes);
+
+                        data += Encoding.ASCII.GetString(bytes, 0, nByte);
+
+                        if (data.IndexOf("<EOF>") > -1)
+                            break;
+                    }
+
+                    Console.WriteLine("Text receieved: {0} ", data);
+                    if (data.Contains("-e"))
+                    {
+                        exit = true;
+                        message = Encoding.ASCII.GetBytes("Exiting...");
+                    }
+
+                    if (data.Contains("-p"))
+                        message = Encoding.ASCII.GetBytes(stock.GetPriceList());
+
+                    if (data.Contains("-s"))
+                        message = Encoding.ASCII.GetBytes(stock.GetAvailableItems());
+
+                    if (data.Contains("-q"))
+                        message = Encoding.ASCII.GetBytes(stock.GetQuantities());
+
+                    if (data.Contains("-f"))
+                    {
+                        stock.FillInventory();
+                        message = Encoding.ASCII.GetBytes("The inventory has been restocked!");
+                    }
+
+                    if (data.Contains("-b"))
+                    {
+                        if (data.Length < 9)
+                        {
+                            message = Encoding.ASCII.GetBytes("When buying an item you must have the correct format. For example: <-b A1 0.85>");
+                        }
+                        else
+                        {
+                            string selector;
+                            double balance;
+                            ParseBuy(data, out selector, out balance);
+                            message = Encoding.ASCII.GetBytes(stock.GetItem(selector, balance));
+                        }
+                    }
+
+                    clientSocket.Send(message);
+
+                    clientSocket.Shutdown(SocketShutdown.Both);
+                    clientSocket.Close();
                 }
             }
-
-            server.Stop();
-        }
-
-        private void ServerService()
-        {
-            Socket socket = server.AcceptSocket();
-
-            Console.WriteLine("Connected " + socket.RemoteEndPoint);
-
-            Stream stream = new NetworkStream(socket);
-            StreamWriter writer = new StreamWriter(stream);
-            StreamReader reader = new StreamReader(stream);
-
-            writer.AutoFlush = true;
-
-            bool client = false;
-
-            new Thread(() =>
+            catch (Exception x)
             {
-                while (!client)
-                {
-                    string s = "";
-                    s = reader.ReadLine();
-
-                    if (s == "req")
-                    {
-                        writer.Write("Test request successful!");
-                        writer.Flush();
-                    }
-
-                    if (s == "exit")
-                    {
-                        writer.WriteLine("Exiting...");
-                        exit = true;
-                    }
-                }
-            }).Start();
+                Console.WriteLine(string.Format("Exception thrown: {0}", x.ToString()));
+            }
         }
 
+        private void ParseBuy(string data, out string selector, out double balance)
+        {
+            data = data.Replace("$", String.Empty);
+
+            int nSelectorIndex = -1;
+            int nBalanceIndex = -1;
+            int nBalanceEnd = 0;
+            selector = string.Empty;
+            balance = 0;
+            for (int i = 1; i < data.Length; i++)
+            {
+                if (data[i] == ' ')
+                {
+                    if (nSelectorIndex == -1)
+                        nSelectorIndex = i + 1;
+                    else if (nBalanceIndex == -1)
+                        nBalanceIndex = i + 1;
+                    else
+                        break;
+                }
+                else
+                {
+                    if (nBalanceIndex > 0)
+                        nBalanceEnd++;
+                }
+            }
+            selector = data.Substring(nSelectorIndex, 2);
+            balance = double.Parse(data.Substring(nBalanceIndex, nBalanceEnd));
+        }
     }
 }

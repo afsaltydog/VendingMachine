@@ -16,11 +16,53 @@ namespace virtVendingMachine
         {
             if (!items.ContainsKey(item.Selector))
                 items.Add(item.Selector, item);
+            else
+                items[item.Selector] = item;
         }
 
-        public Item GetItem(string selector)
+        public string GetItem(string selector, double balance)
         {
-            return items[selector];
+            StringBuilder message = new StringBuilder();
+            try
+            {
+                //get price and display price
+                Item item = items[selector];
+                
+                if (item.Count < 1)
+                {
+                    message.Append(string.Format("Your selection {0} {1} is out of stock. Please select another item", item.Selector, item.Name));
+                }
+                else if (item.Count > 0)
+                {
+                    if (balance > item.Price)
+                    {
+                        item.Count -= 1;
+                        message.Append(string.Format("Coin Return: ${0}. ", (balance - item.Price).ToString()));
+                        message.Append(string.Format("Your selection, {0} is ready below. Please retrieve your change", item.Name));
+                        items[selector] = item;
+                    }
+                    else if (balance == item.Price)
+                    {
+                        item.Count -= 1;
+                        message.Append(string.Format("Your selection, {0} is ready below.", item.Name));
+                        items[selector] = item;
+                    }
+                    else
+                    {
+                        message.Append(string.Format("You need ${0} more to make this selection", (item.Price - balance).ToString()));
+                    }
+                }
+                else
+                {
+                    message.Append(string.Format("{0} is an invalid selection", selector));
+                }
+                return message.ToString();
+            }
+            catch (Exception x)
+            {
+                message.Append(string.Format("{0} is an invalid selecion", selector));
+                return message.ToString();
+            }
         }
 
         public string GetAvailableItems()
@@ -41,6 +83,18 @@ namespace virtVendingMachine
             foreach (Item item in items.Values)
             {
                 sb.Append(string.Format("{0}: ${1}", item.Name, item.Price));
+                sb.Append(", ");
+            }
+            sb.Remove(sb.Length - 2, 1);
+            return sb.ToString();
+        }
+
+        public string GetQuantities()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (Item item in items.Values)
+            {
+                sb.Append(string.Format("{0}: {1} in stock", item.Name, item.Count));
                 sb.Append(", ");
             }
             sb.Remove(sb.Length - 2, 1);

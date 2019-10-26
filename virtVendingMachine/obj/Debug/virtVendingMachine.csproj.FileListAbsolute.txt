@@ -6,3 +6,4 @@ C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVen
 C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.csproj.GenerateResource.Cache
 C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.exe
 C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.pdb
+C:\Users\aferg\Documents\Visual Studio 2013\virtVendingMachine\obj\Debug\virtVendingMachine.csprojResolveAssemblyReference.cache
